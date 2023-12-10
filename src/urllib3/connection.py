@@ -668,6 +668,8 @@ class HTTPSConnection(HTTPConnection):
 
         if self._has_connected_to_proxy:
             assert self.proxy_is_verified is not None
+        else:
+            assert self.proxy_is_verified is None
 
     def _connect_tls_proxy(self, hostname: str, sock: socket.socket) -> ssl.SSLSocket:
         """

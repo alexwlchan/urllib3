@@ -815,6 +815,8 @@ class TestHTTPSProxyVerification:
             r = https.request("GET", destination_url)
             assert r.status == 200
 
+            self.assert_connection(https, is_verified=True, proxy_is_verified=True)
+
     def test_https_proxy_ipv6_san(
         self, ipv6_san_proxy_with_server: tuple[ServerConfig, ServerConfig]
     ) -> None:
@@ -824,6 +826,8 @@ class TestHTTPSProxyVerification:
         with proxy_from_url(proxy_url, ca_certs=proxy.ca_certs) as https:
             r = https.request("GET", destination_url)
             assert r.status == 200
+
+            self.assert_connection(https, is_verified=True, proxy_is_verified=True)
 
     @pytest.mark.parametrize("target_scheme", ["http", "https"])
     def test_https_proxy_no_san(

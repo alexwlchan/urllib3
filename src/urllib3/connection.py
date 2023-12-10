@@ -663,6 +663,9 @@ class HTTPSConnection(HTTPConnection):
         # not using tunnelling.
         self._has_connected_to_proxy = bool(self.proxy)
 
+        if self._has_connected_to_proxy:
+            assert self.proxy_is_verified is not None
+
     def _connect_tls_proxy(self, hostname: str, sock: socket.socket) -> ssl.SSLSocket:
         """
         Establish a TLS connection to the proxy using the provided SSL context.

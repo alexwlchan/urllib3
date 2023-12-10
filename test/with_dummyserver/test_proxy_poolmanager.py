@@ -23,7 +23,7 @@ from dummyserver.testcase import (
 from dummyserver.tornadoserver import DEFAULT_CA, HAS_IPV6, get_unreachable_address
 from urllib3 import HTTPResponse
 from urllib3._collections import HTTPHeaderDict
-from urllib3.connection import VerifiedHTTPSConnection
+from urllib3.connection import HTTPConnection, VerifiedHTTPSConnection
 from urllib3.connectionpool import connection_from_url
 from urllib3.exceptions import (
     ConnectTimeoutError,
@@ -66,21 +66,35 @@ class TestHTTPProxyManager(HypercornDummyProxyTestCase):
         super().teardown_class()
         shutil.rmtree(cls.certs_dir)
 
+    def assert_connection(self, http: ProxyManager, *, is_verified: bool, proxy_is_verified: bool) -> None:
+        pool = list(http.pools._container.values())[-1]
+        connection = pool.pool.queue[-1]
+
+        # Note: we're intentionally doing an identity check here, to make
+        # sure these are set to proper boolean values, and not a bool-like
+        # value like ``None`` which is just an unchanged default value.
+        assert connection.is_verified is is_verified
+        assert connection.proxy_is_verified is proxy_is_verified
+
     def test_basic_proxy(self) -> None:
         with proxy_from_url(self.proxy_url, ca_certs=DEFAULT_CA) as http:
             r = http.request("GET", f"{self.http_url}/")
             assert r.status == 200
+            self.assert_connection(http, is_verified=False, proxy_is_verified=False)
 
             r = http.request("GET", f"{self.https_url}/")
             assert r.status == 200
+            self.assert_connection(http, is_verified=True, proxy_is_verified=False)
 
     def test_https_proxy(self) -> None:
         with proxy_from_url(self.https_proxy_url, ca_certs=DEFAULT_CA) as https:
             r = https.request("GET", f"{self.https_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=True, proxy_is_verified=True)
 
             r = https.request("GET", f"{self.http_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=False, proxy_is_verified=True)
 
     def test_http_and_https_kwarg_ca_cert_data_proxy(self) -> None:
         with open(DEFAULT_CA) as pem_file:
@@ -88,9 +102,11 @@ class TestHTTPProxyManager(HypercornDummyProxyTestCase):
         with proxy_from_url(self.https_proxy_url, ca_cert_data=pem_file_data) as https:
             r = https.request("GET", f"{self.https_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=True, proxy_is_verified=True)
 
             r = https.request("GET", f"{self.http_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=False, proxy_is_verified=True)
 
     def test_https_proxy_with_proxy_ssl_context(self) -> None:
         proxy_ssl_context = create_urllib3_context()
@@ -102,15 +118,18 @@ class TestHTTPProxyManager(HypercornDummyProxyTestCase):
         ) as https:
             r = https.request("GET", f"{self.https_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=True, proxy_is_verified=True)
 
             r = https.request("GET", f"{self.http_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=False, proxy_is_verified=True)
 
     @withPyOpenSSL
     def test_https_proxy_pyopenssl_not_supported(self) -> None:
         with proxy_from_url(self.https_proxy_url, ca_certs=DEFAULT_CA) as https:
             r = https.request("GET", f"{self.http_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=False, proxy_is_verified=True)
 
             with pytest.raises(
                 ProxySchemeUnsupported, match="isn't available on non-native SSLContext"
@@ -125,9 +144,11 @@ class TestHTTPProxyManager(HypercornDummyProxyTestCase):
         ) as https:
             r = https.request("GET", f"{self.http_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=False, proxy_is_verified=True)
 
             r = https.request("GET", f"{self.https_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=True, proxy_is_verified=True)
 
     def test_nagle_proxy(self) -> None:
         """Test that proxy connections do not have TCP_NODELAY turned on"""
@@ -173,15 +194,18 @@ class TestHTTPProxyManager(HypercornDummyProxyTestCase):
         ) as http:
             r = http.request("GET", f"{self.http_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=False, proxy_is_verified=True)
 
             r = http.request("GET", f"{self.https_url}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=True, proxy_is_verified=True)
 
     @resolvesLocalhostFQDN()
     def test_proxy_https_fqdn(self) -> None:
         with proxy_from_url(self.proxy_url, ca_certs=DEFAULT_CA) as http:
             r = http.request("GET", f"{self.https_url_fqdn}/")
             assert r.status == 200
+            self.assert_connection(https, is_verified=True, proxy_is_verified=False)
 
     def test_proxy_verified(self) -> None:
         with proxy_from_url(
@@ -228,6 +252,8 @@ class TestHTTPProxyManager(HypercornDummyProxyTestCase):
 
             assert r.status == 303
 
+            self.assert_connection(https, is_verified=False, proxy_is_verified=False)
+
             r = http.request(
                 "GET",
                 f"{self.http_url}/redirect",
@@ -236,6 +262,8 @@ class TestHTTPProxyManager(HypercornDummyProxyTestCase):
 
             assert r.status == 200
             assert r.data == b"Dummy server!"
+
+            self.assert_connection(https, is_verified=False, proxy_is_verified=False)
 
     def test_cross_host_redirect(self) -> None:
         with proxy_from_url(self.proxy_url) as http:

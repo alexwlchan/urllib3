@@ -658,6 +658,9 @@ class HTTPSConnection(HTTPConnection):
         self.sock = sock_and_verified.socket
         self.is_verified = sock_and_verified.is_verified
 
+        if self.proxy:
+            self.proxy_is_verified = sock_and_verified.is_verified
+
         # If there's a proxy to be connected to we are fully connected.
         # This is set twice (once above and here) due to forwarding proxies
         # not using tunnelling.

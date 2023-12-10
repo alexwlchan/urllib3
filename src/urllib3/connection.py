@@ -658,10 +658,18 @@ class HTTPSConnection(HTTPConnection):
         self.sock = sock_and_verified.socket
         self.is_verified = sock_and_verified.is_verified
 
+        if self.proxy:
+            self.proxy_is_verified = sock_and_verified.is_verified
+
         # If there's a proxy to be connected to we are fully connected.
         # This is set twice (once above and here) due to forwarding proxies
         # not using tunnelling.
         self._has_connected_to_proxy = bool(self.proxy)
+
+        if self._has_connected_to_proxy:
+            assert self.proxy_is_verified is not None
+        else:
+            assert self.proxy_is_verified is None
 
     def _connect_tls_proxy(self, hostname: str, sock: socket.socket) -> ssl.SSLSocket:
         """

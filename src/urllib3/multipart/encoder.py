@@ -362,34 +362,10 @@ class MultipartEncoder:
             file_headers = None
             if isinstance(v, (list, tuple)):
                 if len(v) == 2:
-                    v = typing.cast(
-                        typing.Tuple[
-                            str,
-                            typing.Union[bytes, str, typing.BinaryIO],
-                        ],
-                        v,
-                    )
                     file_name, file_pointer = v
                 elif len(v) == 3:
-                    v = typing.cast(
-                        typing.Tuple[
-                            str,
-                            typing.Union[bytes, str, typing.BinaryIO],
-                            typing.Union[bytes, str],
-                        ],
-                        v,
-                    )
                     file_name, file_pointer, file_type = v
                 else:
-                    v = typing.cast(
-                        typing.Tuple[
-                            str,
-                            typing.Union[bytes, str, typing.BinaryIO],
-                            typing.Union[bytes, str],
-                            typing.Mapping[str, str],
-                        ],
-                        v,
-                    )
                     file_name, file_pointer, file_type, file_headers = v
             else:
                 file_pointer = v
@@ -504,7 +480,6 @@ def readable_data(
         data = typing.cast(typing.BinaryIO, data)
         return data
 
-    data = typing.cast(typing.AnyStr, data)
     return _CustomBytesIO(data, encoding)
 
 
@@ -562,7 +537,6 @@ def total_len(
         return o.len
 
     if hasattr(o, "fileno"):
-        o = typing.cast(typing.Union[typing.TextIO, typing.BinaryIO], o)
         try:
             fileno = o.fileno()
         except io.UnsupportedOperation:
@@ -636,10 +610,4 @@ def to_list(
         )
         return list(fields.items())
 
-    fields = typing.cast(
-        typing.Sequence[
-            typing.Tuple[str, typing.Union[bytes, str, PartTuples, typing.BinaryIO]]
-        ],
-        fields,
-    )
     return list(fields)

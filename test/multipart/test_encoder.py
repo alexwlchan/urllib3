@@ -186,7 +186,7 @@ class TestMultipartEncoder(unittest.TestCase):
         assert read_so_far == total_size
 
         for k, v in fields.items():
-            if k != "test":
+            if k != "test" and isinstance(v[1], typing.BinaryIO):
                 v[1].close()
 
     def test_regression_2(self) -> None:

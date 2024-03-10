@@ -185,6 +185,10 @@ class TestMultipartEncoder(unittest.TestCase):
 
         assert read_so_far == total_size
 
+        for k, v in fields.items():
+            if k != "test":
+                v[1].close()
+
     def test_regression_2(self) -> None:
         """Ensure issue #31 doesn't ever happen again."""
         fields = {"test": "t" * 8100}

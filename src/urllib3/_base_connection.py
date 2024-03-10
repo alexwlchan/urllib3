@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import typing
 
-from .multipart import MultipartEncoder
 from .util.connection import _TYPE_SOCKET_OPTIONS
 from .util.timeout import _DEFAULT_TIMEOUT, _TYPE_TIMEOUT
 from .util.url import Url
 
+if typing.TYPE_CHECKING:
+    from .multipart import MultipartEncoder
+
 _TYPE_BODY = typing.Union[
-    bytes, typing.IO[typing.Any], typing.Iterable[bytes], str, MultipartEncoder
+    bytes, typing.IO[typing.Any], typing.Iterable[bytes], str, "MultipartEncoder"
 ]
 
 

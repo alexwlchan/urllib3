@@ -28,7 +28,7 @@ def guess_content_type(
     return default
 
 
-def format_header_param_rfc2231(name: str, value: Union[str, bytes]) -> str:
+def format_header_param_rfc2231(name: str, value: typing.Union[str, bytes]) -> str:
     """
     Helper function to format and quote a single header parameter using the
     strategy defined in RFC 2231.
@@ -76,7 +76,7 @@ def format_header_param_rfc2231(name: str, value: Union[str, bytes]) -> str:
     return value
 
 
-def format_multipart_header_param(name: str, value: Union[str, bytes]) -> str:
+def format_multipart_header_param(name: str, value: typing.Union[str, bytes]) -> str:
     """
     Format and quote a single multipart header parameter.
 
@@ -114,7 +114,7 @@ def format_multipart_header_param(name: str, value: Union[str, bytes]) -> str:
     return f'{name}="{value}"'
 
 
-def format_header_param_html5(name: str, value: Union[str, bytes]) -> str:
+def format_header_param_html5(name: str, value: typing.Union[str, bytes]) -> str:
     """
     .. deprecated:: 2.0.0
         Renamed to :func:`format_multipart_header_param`. Will be
@@ -132,7 +132,7 @@ def format_header_param_html5(name: str, value: Union[str, bytes]) -> str:
     return format_multipart_header_param(name, value)
 
 
-def format_header_param(name: str, value: Union[str, bytes]) -> str:
+def format_header_param(name: str, value: typing.Union[str, bytes]) -> str:
     """
     .. deprecated:: 2.0.0
         Renamed to :func:`format_multipart_header_param`. Will be
@@ -241,7 +241,7 @@ class RequestField:
 
         return request_param
 
-    def _render_part(self, name: str, value: Union[str, bytes]) -> str:
+    def _render_part(self, name: str, value: typing.Union[str, bytes]) -> str:
         """
         Override this method to change how each multipart header
         parameter is formatted. By default, this calls

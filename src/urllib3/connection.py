@@ -15,7 +15,6 @@ from socket import timeout as SocketTimeout
 
 if typing.TYPE_CHECKING:
     from typing import Literal
-    from .multipart import MultipartEncoder
 
     from .response import HTTPResponse
     from .util.ssl_ import _TYPE_PEER_CERT_RET_DICT

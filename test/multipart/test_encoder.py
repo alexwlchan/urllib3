@@ -4,6 +4,8 @@ import io
 import typing
 import unittest
 
+import pytest
+
 from urllib3 import filepost
 from urllib3.multipart.encoder import MultipartEncoder, _CustomBytesIO
 
@@ -220,7 +222,14 @@ class TestMultipartEncoder(unittest.TestCase):
         m = MultipartEncoder(fields=fields)
         assert len(m.read()) > 0
 
-    def test_accepts_custom_content_type(self) -> None:
+    @pytest.mark.parametrize(
+        "content_type",
+        [
+            b"application/json".decode("utf-8"),
+            b"application/json",
+        ],
+    )
+    def test_accepts_custom_content_type(self, content_type: str | bytes) -> None:
         """Verify that the Encoder handles custom content-types.
 
         See https://github.com/requests/toolbelt/issues/52
@@ -231,27 +240,7 @@ class TestMultipartEncoder(unittest.TestCase):
                 (
                     b"filename".decode("utf-8"),
                     b"filecontent",
-                    b"application/json".decode("utf-8"),
-                ),
-            )
-        ]
-        m = MultipartEncoder(fields=fields)
-        output = m.read().decode("utf-8")
-        assert output.index("Content-Type: application/json\r\n") > 0
-
-    def test_accepts_custom_content_type_as_bytes(self) -> None:
-        """Verify that the Encoder handles custom content-types which
-        are bytes.
-
-        See https://github.com/requests/toolbelt/issues/52
-        """
-        fields = [
-            (
-                b"test".decode("utf-8"),
-                (
-                    b"filename".decode("utf-8"),
-                    b"filecontent",
-                    b"application/json",
+                    content_type,
                 ),
             )
         ]
